@@ -23,7 +23,7 @@ const connect = server => {
   // TODO 1.2 attach a socket to the express server by passing the express server instance as an argument when socket.io is invoked
 
   // TODO 1.3 listen for new connections and use the provided "onSocketConnect" function
-  io.on('connection', function(socket){
+  io.on('connect', function(socket){
     console.log('a user connected');
     onSocketConnect(io)(socket);
   });
