@@ -7,31 +7,43 @@ const onSocketConnect = io => socket => {
     console.log("LOGIN", username);
 
     if(db.get(username)) {
-      // if(typeof login === function) {
-      // TODO 2.2 Prevent users from using an existing username using the "acknowledgement" from the client
-      login("username taken, choose an other");
+      console.log("username taken!", username);
+      if(typeof login === "function") {
+        // TODO 2.2 Prevent users from using an existing username using the "acknowledgement" from the client
+        login("username taken, choose an other");
+      }
     } else {
+      console.log("username stared in db!", username);
       // TODO 2.3 Emit an update user list event (eg "UPDATE_USER_LIST") to all clients when there is a login event
-      logout = db.create(username, socket.id);
-      socket.broadcast.emit("UPDATE_USER_LIST", {users: db.all()});
+      const logout = db.create(username, socket.id);
+      broadcastAllUsersList(socket);
+
+      // TODO 2.4 Listen for "disconnect" events and remove the socket user from the users object (*hint: db.create(username, socket.id) returns the logout fn)
+      socket.on('disconnect', () => {
+        console.log("LOGOUT", username);
+        if(typeof logout === "function") {
+          logout();
+          // TODO 2.5 emit "UPDATE_USER_LIST" after user has been "logged out" and is removed from "users" object
+          broadcastAllUsersList(socket);
+        }
+      });
     }
-    // }
-    
-
   });
-
-  // TODO 2.4 Listen for "disconnect" events and remove the socket user from the users object (*hint: db.create(username, socket.id) returns the logout fn)
-  //  socket.on('disconnect' () )
-  // TODO 2.5 emit "UPDATE_USER_LIST" after user has been "logged out" and is removed from "users" object
-
+  
   // TODO 3.1 Check if a "toUser" is specified and only broadcast to that user
   // TODO 3.2 Include information about the "fromUser" so the client can filter draw events from other users and only display events from the selected user
 
+  
   // TODO 1.4 listen for draw action-type events (eg "DRAW_POINTS") from the socket and broadcast them to others sockets.
   socket.on("DRAW_POINTS", (data) => {
     console.log("draw point event!");
     socket.broadcast.emit("DRAW_POINTS", data)
   } );
+};
+
+const broadcastAllUsersList = socket => {
+  console.log("AllUsers", {users: db.all()});
+  socket.broadcast.emit("UPDATE_USER_LIST", {users: db.all()});
 };
 
 const connect = server => {
